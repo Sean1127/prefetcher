@@ -1,15 +1,13 @@
 #ifndef TRANSPOSE_IMPL
 #define TRANSPOSE_IMPL
 
-void naive_transpose(int *src, int *dst, int w, int h)
+void transpose(int *src, int *dst, int w, int h)
 {
+#if defined(NAIVE) || defined(VERIFY)
     for (int x = 0; x < w; x++)
         for (int y = 0; y < h; y++)
             *(dst + x * h + y) = *(src + y * w + x);
-}
-
-void sse_transpose(int *src, int *dst, int w, int h)
-{
+#elif defined(SSE)
     for (int x = 0; x < w; x += 4) {
         for (int y = 0; y < h; y += 4) {
             __m128i I0 = _mm_loadu_si128((__m128i *)(src + (y + 0) * w + x));
@@ -30,10 +28,7 @@ void sse_transpose(int *src, int *dst, int w, int h)
             _mm_storeu_si128((__m128i *)(dst + ((x + 3) * h) + y), I3);
         }
     }
-}
-
-void sse_prefetch_transpose(int *src, int *dst, int w, int h)
-{
+#elif defined(SSE_PREFETCH)
     for (int x = 0; x < w; x += 4) {
         for (int y = 0; y < h; y += 4) {
 #define PFDIST  8
@@ -60,6 +55,7 @@ void sse_prefetch_transpose(int *src, int *dst, int w, int h)
             _mm_storeu_si128((__m128i *)(dst + ((x + 3) * h) + y), I3);
         }
     }
+#endif /* transpose method */
 }
 
 #endif /* TRANSPOSE_IMPL */
